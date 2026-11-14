@@ -32,6 +32,8 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Run Bandit
         run: bandit -r app -f screen
+      - name: Dependency audit (pip-audit)
+        run: pip-audit -r requirements.txt
 
   test:
     name: Tests (pytest)
@@ -55,9 +57,6 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Run pytest with coverage
         run: pytest --cov=app --cov-report=term-missing
+        # Test config (fake keys, JWT secret, fake Redis) comes from tests/conftest.py.
         env:
           REDIS_URL: redis://localhost:6379/0
-          JWT_SECRET: ci-test-secret
-          GATEWAY_API_KEYS: "ci:ci-secret"
-          ANTHROPIC_API_KEY: "sk-ant-ci-test-0000000000000000"
-          OPENAI_API_KEY: "sk-ci-test-0000000000000000"

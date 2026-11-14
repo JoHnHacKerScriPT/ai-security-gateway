@@ -105,7 +105,7 @@ def _inspect_and_return(response, principal: Principal):
     except ValueError:
         # Non-JSON upstream response (shouldn't normally happen) — pass the
         # status through without attempting output inspection on it.
-        raise HTTPException(status_code=502, detail="Upstream returned a non-JSON response.")
+        raise HTTPException(status_code=502, detail="Upstream returned a non-JSON response.") from None
 
     if response.status_code >= 400:
         # Don't run output guardrails on the provider's own error payloads;

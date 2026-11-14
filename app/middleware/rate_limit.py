@@ -22,7 +22,7 @@ from app.observability.metrics import RATE_LIMIT_TRIGGERED_TOTAL
 
 # KEYS[1] = bucket key
 # ARGV[1] = capacity, ARGV[2] = refill_per_second, ARGV[3] = now (float), ARGV[4] = cost, ARGV[5] = ttl_seconds
-_TOKEN_BUCKET_LUA = """
+_RATE_LIMIT_LUA = """
 local tokens = tonumber(redis.call('HGET', KEYS[1], 'tokens'))
 local ts = tonumber(redis.call('HGET', KEYS[1], 'ts'))
 local capacity = tonumber(ARGV[1])
@@ -100,7 +100,7 @@ class RedisTokenBucketLimiter:
     async def allow(self, key: str, cost: float = 1.0) -> tuple[bool, float]:
         now = time.time()
         allowed, remaining = await self._redis.eval(
-            _TOKEN_BUCKET_LUA,
+            _RATE_LIMIT_LUA,
             1,
             f"ratelimit:{key}",
             self._capacity,

@@ -1,5 +1,5 @@
 [tool.ruff]
-line-length = 110
+line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
@@ -7,6 +7,10 @@ select = ["E", "F", "I", "UP", "B", "S"]
 ignore = [
     "S101",  # assert used (fine in tests; app code has almost none)
 ]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection markers are meant to be used as defaults.
+extend-immutable-calls = ["fastapi.Body", "fastapi.Depends", "fastapi.Security"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "S105", "S106"]  # asserts + obviously-fake test credentials
