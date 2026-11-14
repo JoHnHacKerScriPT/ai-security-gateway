@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="AI Security Gateway",
-        description="Production-grade reverse proxy in front of AI provider APIs.",
+        description="Security reverse proxy in front of AI provider APIs.",
         version="0.1.0",
         lifespan=lifespan,
     )

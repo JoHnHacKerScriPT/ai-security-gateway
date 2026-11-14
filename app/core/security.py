@@ -13,11 +13,15 @@ import hmac
 import time
 from dataclasses import dataclass
 
+import jwt
 from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
 
 from app.core.config import get_settings
+
+# A token missing any of these is rejected, so a token minted without an
+# expiry can never be valid forever.
+_REQUIRED_CLAIMS = ["exp", "iat", "sub"]
 
 
 @dataclass(frozen=True)
@@ -46,8 +50,15 @@ def create_access_token(subject: str, expire_minutes: int | None = None) -> str:
 def _verify_jwt(token: str) -> Principal:
     settings = get_settings()
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
-    except JWTError as exc:
+        # `algorithms` is a fixed allow-list from config, never taken from the
+        # token header: that is what blocks "alg: none" and algorithm confusion.
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=[settings.jwt_algorithm],
+            options={"require": _REQUIRED_CLAIMS},
+        )
+    except jwt.InvalidTokenError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",

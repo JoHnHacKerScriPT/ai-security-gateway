@@ -5,7 +5,7 @@ import os
 import pytest
 
 # Force a predictable, permissive config before anything imports app.core.config.
-os.environ.setdefault("JWT_SECRET", "test-secret")
+os.environ.setdefault("JWT_SECRET", "test-secret-0123456789abcdefghijklmnopqrstuvwxyz")  # >=32 bytes
 os.environ.setdefault("GATEWAY_API_KEYS", "testkey:testsecret")
 os.environ.setdefault("RATE_LIMIT_BUCKET_CAPACITY", "3")
 os.environ.setdefault("RATE_LIMIT_REFILL_PER_SECOND", "0.001")  # effectively no refill during a test

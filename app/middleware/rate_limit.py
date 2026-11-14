@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import time
 
-from jose import jwt as jose_jwt
+import jwt
 from redis.asyncio import Redis
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -71,9 +71,11 @@ def resolve_rate_limit_key(request: Request) -> str:
         if auth.lower().startswith("bearer "):
             token = auth[7:]
             try:
-                claims = jose_jwt.get_unverified_claims(token)
+                # Unverified on purpose: this only picks a bucket. The signature
+                # is checked by the auth dependency before anything is served.
+                claims = jwt.decode(token, options={"verify_signature": False})
                 identity = f"jwt:{claims.get('sub', 'unknown')}"
-            except Exception:
+            except jwt.InvalidTokenError:
                 identity = "jwt:invalid"
 
     return f"{identity}:{client_ip}"
@@ -123,7 +125,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         )
 
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in EXEMPT_PATHS:
+        # scope["path"] is the path the router actually dispatches on.
+        # request.url is rebuilt from the Host header too, and older Starlette
+        # let a crafted Host make request.url.path read "/health" while the
+        # request was routed to /v1/... (rate-limit bypass).
+        if request.scope["path"] in EXEMPT_PATHS:
             return await call_next(request)
 
         key = resolve_rate_limit_key(request)
